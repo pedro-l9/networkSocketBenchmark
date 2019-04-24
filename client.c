@@ -10,12 +10,10 @@
 #include <netinet/in.h>
 #define DOWNLOAD_FOLDER "download/"
 
-void initSocket(struct sockaddr_in *address, int *newSocket);
+void initClientSocket(struct sockaddr_in *address, int *newSocket);
 void connectSocket(struct sockaddr_in *serverAddress, int *socket);
-void fetchFile(int socket, long *fileSize, char *fileName);
+void fetchFile(int socket, long *fileSize, char *fileName, char *buffer);
 void logDataToFile(int bufferSize, long downloadTime, long fileSize);
-void getConfiguration(int argc, char *const argv[]);
-void displayUsage();
 
 struct globalConfig_t
 {
@@ -29,7 +27,67 @@ struct globalConfig_t
 
 static const char *optString = "h:p:b:f:ls?";
 
-char *buffer;
+void displayUsage()
+{
+	printf("------------ TP01 - Client ------------\n\n");
+
+	printf("Configuração Obrigatória:");
+	printf("\n\t-f: nome do arquivo a baixar");
+	printf("\n\t-b: tamanho do buffer\n");
+
+	printf("Opcionais:");
+	printf("\n\t-h: endereço do servidor (default: 127.0.0.1)");
+	printf("\n\t-p: porta do servidor (default: 8080)");
+	printf("\n\t-l: habilita log dos dados para arquivo");
+	printf("\n\t-s: execução silenciosa, desabilita output para o terminal\n");
+}
+
+void getConfiguration(int argc, char *const argv[])
+{
+	int opt = 0;
+	opt = getopt(argc, argv, optString);
+	while (opt != -1)
+	{
+		switch (opt)
+		{
+		case 'h':
+			globalConfig.serverIP = optarg;
+			break;
+
+		case 'p':
+			globalConfig.serverPort = atoi(optarg);
+			break;
+
+		case 'b':
+			globalConfig.bufferSize = atoi(optarg);
+			break;
+
+		case 'f':
+			globalConfig.fileName = optarg;
+			break;
+
+		case 'l':
+			globalConfig.logData = 1;
+			break;
+
+		case 's':
+			globalConfig.silent = 1;
+			break;
+
+		case '?':
+			displayUsage();
+			break;
+		}
+
+		opt = getopt(argc, argv, optString);
+	}
+
+	if (globalConfig.bufferSize == 0 || globalConfig.fileName == "")
+	{
+		displayUsage();
+		exit(EXIT_FAILURE);
+	}
+}
 
 int main(int argc, char *const argv[])
 {
@@ -38,6 +96,7 @@ int main(int argc, char *const argv[])
 	struct sockaddr_in serverAddress;
 	struct timeval start, end;
 	long fileSize;
+	char *buffer;
 
 	globalConfig.serverPort = 8080;
 	globalConfig.serverIP = "127.0.0.1";
@@ -52,7 +111,7 @@ int main(int argc, char *const argv[])
 	buffer = malloc(globalConfig.bufferSize * sizeof(char));
 
 	//Inicializa os dados do Socket
-	initSocket(&serverAddress, &socket);
+	initClientSocket(&serverAddress, &socket);
 
 	//Conecta o socket ao servidor
 	connectSocket(&serverAddress, &socket);
@@ -61,7 +120,7 @@ int main(int argc, char *const argv[])
 	gettimeofday(&start, NULL);
 
 	//Descobre o tamanho do arquivo em bytes e faz o download do servidor
-	fetchFile(socket, &fileSize, globalConfig.fileName);
+	fetchFile(socket, &fileSize, globalConfig.fileName, buffer);
 
 	//Marca o tempo do final da transmissão do arquivo
 	gettimeofday(&end, NULL);
@@ -84,7 +143,7 @@ int main(int argc, char *const argv[])
 	return 0;
 }
 
-void initSocket(struct sockaddr_in *address, int *newSocket)
+void initClientSocket(struct sockaddr_in *address, int *newSocket)
 {
 	if ((*newSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
@@ -114,7 +173,7 @@ void connectSocket(struct sockaddr_in *serverAddress, int *socket)
 	}
 }
 
-void fetchFile(int socket, long *fileSize, char *fileName)
+void fetchFile(int socket, long *fileSize, char *fileName, char *buffer)
 {
 	//Define o lugar onde colocar o arquivo a partir do nome dele e da pasta de downloads
 	char *downloadFile;
@@ -181,66 +240,4 @@ void logDataToFile(int bufferSize, long downloadTime, long fileSize)
 	fprintf(file, "%i %ld %ld\n", bufferSize, downloadTime, fileSize);
 
 	fclose(file);
-}
-
-void getConfiguration(int argc, char *const argv[])
-{
-	int opt = 0;
-	opt = getopt(argc, argv, optString);
-	while (opt != -1)
-	{
-		switch (opt)
-		{
-		case 'h':
-			globalConfig.serverIP = optarg;
-			break;
-
-		case 'p':
-			globalConfig.serverPort = atoi(optarg);
-			break;
-
-		case 'b':
-			globalConfig.bufferSize = atoi(optarg);
-			break;
-
-		case 'f':
-			globalConfig.fileName = optarg;
-			break;
-
-		case 'l':
-			globalConfig.logData = 1;
-			break;
-
-		case 's':
-			globalConfig.silent = 1;
-			break;
-
-		case '?':
-			displayUsage();
-			break;
-		}
-
-		opt = getopt(argc, argv, optString);
-	}
-
-	if (globalConfig.bufferSize == 0 || globalConfig.fileName == "")
-	{
-		displayUsage();
-		exit(EXIT_FAILURE);
-	}
-}
-
-void displayUsage()
-{
-	printf("------------ TP01 - Client ------------\n\n");
-
-	printf("Configuração Obrigatória:");
-	printf("\n\t-f: nome do arquivo a baixar");
-	printf("\n\t-b: tamanho do buffer\n");
-
-	printf("Opcionais:");
-	printf("\n\t-h: endereço do servidor (default: 127.0.0.1)");
-	printf("\n\t-p: porta do servidor (default: 8080)");
-	printf("\n\t-l: habilita log dos dados para arquivo");
-	printf("\n\t-s: execução silenciosa, desabilita output para o terminal\n");
 }

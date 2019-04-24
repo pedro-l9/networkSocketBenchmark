@@ -9,11 +9,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-void initSocket(int *serverFd, int *opt, struct sockaddr_in *address);
-void createSocket(int socketFd, struct sockaddr_in *address, int *newSocket);
+void initServerSocket(int *serverFd, int *opt, struct sockaddr_in *address);
+void listenSocket(int socketFd, struct sockaddr_in *address, int *newSocket);
 FILE *openFile(char *fileName, long *fileSize);
-void getConfiguration(int argc, char *const argv[]);
-void displayUsage();
+long sendFile(FILE *filePointer, long fileSize, char *buffer, int bufferSize);
 
 struct globalConfig_t
 {
@@ -23,11 +22,52 @@ struct globalConfig_t
 
 static const char *optString = "p:b:?";
 
-char *buffer;
+void displayUsage()
+{
+	printf("------------ TP01 - Server ------------\n\n");
+
+	printf("Configuração Obrigatória:");
+	printf("\n\t-b: tamanho do buffer\n");
+
+	printf("Opcionais:");
+	printf("\n\t-p: porta do servidor (default: 8080)\n");
+}
+
+void getConfiguration(int argc, char *const argv[])
+{
+	int opt = 0;
+	opt = getopt(argc, argv, optString);
+	while (opt != -1)
+	{
+		switch (opt)
+		{
+		case 'p':
+			globalConfig.port = atoi(optarg);
+			break;
+
+		case 'b':
+			globalConfig.bufferSize = atoi(optarg);
+			break;
+
+		case '?':
+			displayUsage();
+			break;
+		}
+
+		opt = getopt(argc, argv, optString);
+	}
+
+	if (globalConfig.bufferSize == 0)
+	{
+		displayUsage();
+		exit(EXIT_FAILURE);
+	}
+}
 
 int main(int argc, char *const argv[])
 {
 	FILE *filePointer;
+	char *buffer;
 	int server_fd, socket, opt = 1;
 	long totalBytes = 0, fileSize, uploadTime;
 	struct sockaddr_in address;
@@ -44,12 +84,12 @@ int main(int argc, char *const argv[])
 	buffer = malloc(globalConfig.bufferSize * sizeof(char));
 
 	//Inicializa os dados do Socket
-	initSocket(&server_fd, &opt, &address);
+	initServerSocket(&server_fd, &opt, &address);
 
 	while (1)
 	{
 		//Cria socket para escutar conexões
-		createSocket(server_fd, &address, &socket);
+		listenSocket(server_fd, &address, &socket);
 
 		//Esvazia o buffer
 		memset(buffer, 0, globalConfig.bufferSize);
@@ -68,22 +108,8 @@ int main(int argc, char *const argv[])
 		//Marca o tempo do início da transmissão do arquivo
 		gettimeofday(&start, NULL);
 
-		totalBytes = 0;
-		while (fileSize != 0)
-		{
-			int sentBytes;
-			int biteSize = fileSize < globalConfig.bufferSize ? fileSize : globalConfig.bufferSize;
-
-			//Faz a leitura do arquivo em "mordidas" do tamanho dos dados restantes ou até o limite do buffer
-			fread(buffer, 1, biteSize, filePointer);
-			fileSize -= biteSize;
-
-			//Faz o envio do arquivo em "mordidas" do tamanho no máximo igual ao do buffer
-			sentBytes = send(socket, buffer, biteSize, 0);
-			totalBytes += sentBytes;
-
-			printf("Enviado: %d bytes\n", sentBytes);
-		}
+		//Envia o arquivo
+		totalBytes = sendfile(filePointer, fileSize, buffer, globalConfig.bufferSize);
 
 		//Marca o tempo do final da transmissão do arquivo
 		gettimeofday(&end, NULL);
@@ -102,7 +128,7 @@ int main(int argc, char *const argv[])
 	return 0;
 }
 
-void initSocket(int *serverFd, int *opt, struct sockaddr_in *address)
+void initServerSocket(int *serverFd, int *opt, struct sockaddr_in *address)
 {
 
 	int addrlen = sizeof(*address);
@@ -139,7 +165,7 @@ void initSocket(int *serverFd, int *opt, struct sockaddr_in *address)
 	}
 }
 
-void createSocket(int socketFd, struct sockaddr_in *address, int *newSocket)
+void listenSocket(int socketFd, struct sockaddr_in *address, int *newSocket)
 {
 	int addrlen = sizeof(*address);
 
@@ -171,44 +197,25 @@ FILE *openFile(char *fileName, long *fileSize)
 	return filePointer;
 }
 
-void getConfiguration(int argc, char *const argv[])
+long sendFile(FILE *filePointer, long fileSize, char *buffer, int bufferSize)
 {
-	int opt = 0;
-	opt = getopt(argc, argv, optString);
-	while (opt != -1)
+	long totalBytes = 0;
+
+	while (fileSize != 0)
 	{
-		switch (opt)
-		{
-		case 'p':
-			globalConfig.port = atoi(optarg);
-			break;
+		int sentBytes;
+		int biteSize = fileSize < bufferSize ? fileSize : bufferSize;
 
-		case 'b':
-			globalConfig.bufferSize = atoi(optarg);
-			break;
+		//Faz a leitura do arquivo em "mordidas" do tamanho dos dados restantes ou até o limite do buffer
+		fread(buffer, 1, biteSize, filePointer);
+		fileSize -= biteSize;
 
-		case '?':
-			displayUsage();
-			break;
-		}
+		//Faz o envio do arquivo em "mordidas" do tamanho no máximo igual ao do buffer
+		sentBytes = send(socket, buffer, biteSize, 0);
+		totalBytes += sentBytes;
 
-		opt = getopt(argc, argv, optString);
+		printf("Enviado: %d bytes\n", sentBytes);
 	}
 
-	if (globalConfig.bufferSize == 0)
-	{
-		displayUsage();
-		exit(EXIT_FAILURE);
-	}
-}
-
-void displayUsage()
-{
-	printf("------------ TP01 - Server ------------\n\n");
-
-	printf("Configuração Obrigatória:");
-	printf("\n\t-b: tamanho do buffer\n");
-
-	printf("Opcionais:");
-	printf("\n\t-p: porta do servidor (default: 8080)\n");
+	return totalBytes;
 }

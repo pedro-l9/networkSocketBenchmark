@@ -1,6 +1,4 @@
 #!/bin/bash
 
-gcc server.c -o server
-gcc client.c -o client
+./server -b 4000000
 
-./server 8080 1024
