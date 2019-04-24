@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+
 #define DOWNLOAD_FOLDER "download/"
 
 void initClientSocket(struct sockaddr_in *address, int *newSocket);

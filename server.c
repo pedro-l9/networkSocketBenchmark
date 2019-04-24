@@ -12,7 +12,7 @@
 void initServerSocket(int *serverFd, int *opt, struct sockaddr_in *address);
 void listenSocket(int socketFd, struct sockaddr_in *address, int *newSocket);
 FILE *openFile(char *fileName, long *fileSize);
-long sendFile(FILE *filePointer, long fileSize, char *buffer, int bufferSize);
+long sendFile(int *socket, FILE *filePointer, long fileSize, char *buffer, int bufferSize);
 
 struct globalConfig_t
 {
@@ -86,6 +86,8 @@ int main(int argc, char *const argv[])
 	//Inicializa os dados do Socket
 	initServerSocket(&server_fd, &opt, &address);
 
+	printf("Aguardando conexões...\n");
+
 	while (1)
 	{
 		//Cria socket para escutar conexões
@@ -109,7 +111,7 @@ int main(int argc, char *const argv[])
 		gettimeofday(&start, NULL);
 
 		//Envia o arquivo
-		totalBytes = sendfile(filePointer, fileSize, buffer, globalConfig.bufferSize);
+		totalBytes = sendFile(&socket, filePointer, fileSize, buffer, globalConfig.bufferSize);
 
 		//Marca o tempo do final da transmissão do arquivo
 		gettimeofday(&end, NULL);
@@ -197,7 +199,7 @@ FILE *openFile(char *fileName, long *fileSize)
 	return filePointer;
 }
 
-long sendFile(FILE *filePointer, long fileSize, char *buffer, int bufferSize)
+long sendFile(int *socket, FILE *filePointer, long fileSize, char *buffer, int bufferSize)
 {
 	long totalBytes = 0;
 
@@ -211,7 +213,7 @@ long sendFile(FILE *filePointer, long fileSize, char *buffer, int bufferSize)
 		fileSize -= biteSize;
 
 		//Faz o envio do arquivo em "mordidas" do tamanho no máximo igual ao do buffer
-		sentBytes = send(socket, buffer, biteSize, 0);
+		sentBytes = send(*socket, buffer, biteSize, 0);
 		totalBytes += sentBytes;
 
 		printf("Enviado: %d bytes\n", sentBytes);
