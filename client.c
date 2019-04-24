@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 #include <time.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -12,31 +13,41 @@
 void initSocket(struct sockaddr_in *address, int *newSocket);
 void connectSocket(struct sockaddr_in *serverAddress, int *socket);
 void fetchFile(int socket, long *fileSize, char *fileName);
+void getConfiguration(int argc, char *const argv[]);
+void displayUsage();
 
-char *buffer, *serverAddress;
-int bufferSize, serverPort;
-struct timeval start, end;
-
-int main(int argc, char const *argv[])
+struct globalConfig_t
 {
+	char *serverIP; /* -h option */
+	int serverPort; /* -p option */
+	char *fileName; /* -f option */
+	int bufferSize; /* -b option */
+	int logData;	/* -l option */
+	int silent;		/* -s option */
+} globalConfig;
 
-	if (argc < 5)
-	{
-		printf("Argumentos insuficientes\n");
-		printf("Execute no formato ./client [endereço_do_servidor] [porta] [nome_do_arquivo] [tamanho_do_buffer]\n");
-		exit(1);
-	}
+static const char *optString = "h:p:b:f:lsh?";
 
-	serverAddress = argv[1];
-	serverPort = atoi(argv[2]);
-	char *fileName = argv[3];
-	bufferSize = atoi(argv[4]);
+char *buffer;
+
+int main(int argc, char *const argv[])
+{
 
 	int socket = 0;
 	struct sockaddr_in serverAddress;
+	struct timeval start, end;
 	long fileSize;
 
-	buffer = malloc(bufferSize * sizeof(char));
+	globalConfig.serverPort = 80;
+	globalConfig.serverIP = "127.0.0.1";
+	globalConfig.silent = 0;
+	globalConfig.fileName = "";
+	globalConfig.bufferSize = 0;
+
+	//Obtem a configuração a partir dos argumentos da linha de comando
+	getConfiguration(argc, argv);
+
+	buffer = malloc(globalConfig.bufferSize * sizeof(char));
 
 	//Inicializa os dados do Socket
 	initSocket(&serverAddress, &socket);
@@ -44,18 +55,25 @@ int main(int argc, char const *argv[])
 	//Conecta o socket ao servidor
 	connectSocket(&serverAddress, &socket);
 
+	//Marca o tempo do início da transmissão do arquivo
+	gettimeofday(&start, NULL);
+
 	//Descobre o tamanho do arquivo em bytes e faz o download do servidor
-	fetchFile(socket, &fileSize, fileName);
+	fetchFile(socket, &fileSize, globalConfig.fileName);
+
+	//Marca o tempo do final da transmissão do arquivo
+	gettimeofday(&end, NULL);
 
 	//Calcula o tempo de transmissão do arquivo em microsegundos
 	long downloadTime = ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec));
 
-	printf("Buffer = %5u byte(s), %6.2lf kbps (%ld bytes em %lu.%06lu s)\n",
-		   bufferSize,
-		   ((fileSize / 1024.0) / (downloadTime / 1000000.0)),
-		   fileSize,
-		   end.tv_sec - start.tv_sec,
-		   end.tv_usec - start.tv_usec);
+	if (!globalConfig.silent)
+		printf("Buffer = %5u byte(s), %6.2lf kbps (%ld bytes em %lu.%06lu s)\n",
+			   globalConfig.bufferSize,
+			   ((fileSize / 1024.0) / (downloadTime / 1000000.0)),
+			   fileSize,
+			   end.tv_sec - start.tv_sec,
+			   end.tv_usec - start.tv_usec);
 
 	return 0;
 }
@@ -71,10 +89,10 @@ void initSocket(struct sockaddr_in *address, int *newSocket)
 	memset(address, '0', sizeof(*address));
 
 	address->sin_family = AF_INET;
-	address->sin_port = htons(serverPort);
+	address->sin_port = htons(globalConfig.serverPort);
 
 	// Converte IP para binário
-	if (inet_pton(AF_INET, serverAddress, &address->sin_addr) <= 0)
+	if (inet_pton(AF_INET, globalConfig.serverIP, &address->sin_addr) <= 0)
 	{
 		printf("\nInvalid address/ Address not supported \n");
 		exit(EXIT_FAILURE);
@@ -105,12 +123,11 @@ void fetchFile(int socket, long *fileSize, char *fileName)
 	//Lê a resposta do servidor, que deve ser o tamanho do arquivo
 	read(socket, fileSize, sizeof(long));
 
-	printf("Buscando arquivo %s, tamanho: %ld bytes\n", fileName, *fileSize);
-
-	printf("Escrevendo arquivo para %s\n", downloadFile);
-
-	//Marca o tempo do início da transmissão do arquivo
-	gettimeofday(&start, NULL);
+	if (!globalConfig.silent)
+	{
+		printf("Buscando arquivo %s, tamanho: %ld bytes\n", fileName, *fileSize);
+		printf("Escrevendo arquivo para %s\n", downloadFile);
+	}
 
 	//Faz a abertura do download a ser gravado
 	FILE *file = fopen(downloadFile, "wb");
@@ -121,7 +138,7 @@ void fetchFile(int socket, long *fileSize, char *fileName)
 	while (bytesLeft != 0)
 	{
 		int sentBytes;
-		int biteSize = fileSize < bufferSize ? bytesLeft : bufferSize;
+		int biteSize = bytesLeft < globalConfig.bufferSize ? bytesLeft : globalConfig.bufferSize;
 
 		//Lê o arquivo, em "mordidas" do tamanho exato do dado restante ou o máximo que cabe no buffer
 		read(socket, buffer, biteSize);
@@ -132,7 +149,68 @@ void fetchFile(int socket, long *fileSize, char *fileName)
 
 	//Fecha o arquivo
 	fclose(file);
+}
 
-	//Marca o tempo do final da transmissão do arquivo
-	gettimeofday(&end, NULL);
+void logDataToFile(int bufferSize, long downloadTime, long fileSize);
+
+void getConfiguration(int argc, char *const argv[])
+{
+	int opt = 0;
+	opt = getopt(argc, argv, optString);
+	while (opt != -1)
+	{
+		switch (opt)
+		{
+		case 'h':
+			globalConfig.serverIP = optarg;
+			break;
+
+		case 'p':
+			globalConfig.serverPort = atoi(optarg);
+			break;
+
+		case 'b':
+			globalConfig.bufferSize = atoi(optarg);
+			break;
+
+		case 'f':
+			globalConfig.fileName = optarg;
+			break;
+
+		case 'l':
+			globalConfig.logData = 1;
+			break;
+
+		case 's':
+			globalConfig.silent = 1;
+			break;
+
+		case '?':
+			displayUsage();
+			break;
+		}
+
+		opt = getopt(argc, argv, optString);
+	}
+
+	if (globalConfig.bufferSize == 0 || globalConfig.fileName == "")
+	{
+		displayUsage();
+		exit(EXIT_FAILURE);
+	}
+}
+
+void displayUsage()
+{
+	printf("------------ TP01 - Client ------------\n\n");
+
+	printf("Configuração Obrigatória:");
+	printf("\n\t-f: nome do arquivo a baixar");
+	printf("\n\t-b: tamanho do buffer\n");
+
+	printf("Opcionais:");
+	printf("\n\t-h: endereço do servidor (default: 127.0.0.1)");
+	printf("\n\t-p: porta do servidor (default: 80)");
+	printf("\n\t-l: habilita log dos dados para arquivo");
+	printf("\n\t-s: execução silenciosa, desabilita output para o terminal\n");
 }
