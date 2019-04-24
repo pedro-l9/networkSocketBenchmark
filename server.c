@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 #include <time.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -11,30 +12,36 @@
 void initSocket(int *serverFd, int *opt, struct sockaddr_in *address);
 void createSocket(int socketFd, struct sockaddr_in *address, int *newSocket);
 FILE *openFile(char *fileName, long *fileSize);
+void getConfiguration(int argc, char *const argv[]);
+void displayUsage();
+
+struct globalConfig_t
+{
+	int port;		/* -p option */
+	int bufferSize; /* -b option */
+} globalConfig;
+
+static const char *optString = "p:b:?";
 
 char *buffer;
-int bufferSize, serverPort;
 
-int main(int argc, char const *argv[])
+int main(int argc, char *const argv[])
 {
-	if (argc < 3)
-	{
-		printf("Argumentos insuficientes\n");
-		printf("Execute no formato ./server [porta] [tamanho_do_buffer]\n");
-		exit(1);
-	}
-
-	serverPort = atoi(argv[1]);
-	bufferSize = atoi(argv[2]);
-
+	FILE *filePointer;
 	int server_fd, socket, opt = 1;
 	long totalBytes = 0, fileSize, uploadTime;
 	struct sockaddr_in address;
 
 	struct timeval start, end;
 
-	buffer = malloc(bufferSize * sizeof(char));
-	FILE *filePointer;
+	globalConfig.port = 8080;
+	globalConfig.bufferSize = 0;
+
+	//Configura o programa a partir dos argumentos de linha de comando
+	getConfiguration(argc, argv);
+
+	//Aloca espaço para o buffer
+	buffer = malloc(globalConfig.bufferSize * sizeof(char));
 
 	//Inicializa os dados do Socket
 	initSocket(&server_fd, &opt, &address);
@@ -45,7 +52,7 @@ int main(int argc, char const *argv[])
 		createSocket(server_fd, &address, &socket);
 
 		//Esvazia o buffer
-		memset(buffer, 0, bufferSize);
+		memset(buffer, 0, globalConfig.bufferSize);
 
 		//Lê a primera requisição, que tem que ser o nome do arquivo
 		read(socket, buffer, 200);
@@ -65,7 +72,7 @@ int main(int argc, char const *argv[])
 		while (fileSize != 0)
 		{
 			int sentBytes;
-			int biteSize = fileSize < bufferSize ? fileSize : bufferSize;
+			int biteSize = fileSize < globalConfig.bufferSize ? fileSize : globalConfig.bufferSize;
 
 			//Faz a leitura do arquivo em "mordidas" do tamanho dos dados restantes ou até o limite do buffer
 			fread(buffer, 1, biteSize, filePointer);
@@ -116,7 +123,7 @@ void initSocket(int *serverFd, int *opt, struct sockaddr_in *address)
 	}
 	address->sin_family = AF_INET;
 	address->sin_addr.s_addr = INADDR_ANY;
-	address->sin_port = htons(serverPort);
+	address->sin_port = htons(globalConfig.port);
 
 	// Faz o bind do socket ao endereço e à porta configurada
 	if (bind(*serverFd, (struct sockaddr *)address,
@@ -162,4 +169,46 @@ FILE *openFile(char *fileName, long *fileSize)
 	rewind(filePointer);
 
 	return filePointer;
+}
+
+void getConfiguration(int argc, char *const argv[])
+{
+	int opt = 0;
+	opt = getopt(argc, argv, optString);
+	while (opt != -1)
+	{
+		switch (opt)
+		{
+		case 'p':
+			globalConfig.port = atoi(optarg);
+			break;
+
+		case 'b':
+			globalConfig.bufferSize = atoi(optarg);
+			break;
+
+		case '?':
+			displayUsage();
+			break;
+		}
+
+		opt = getopt(argc, argv, optString);
+	}
+
+	if (globalConfig.bufferSize == 0)
+	{
+		displayUsage();
+		exit(EXIT_FAILURE);
+	}
+}
+
+void displayUsage()
+{
+	printf("------------ TP01 - Server ------------\n\n");
+
+	printf("Configuração Obrigatória:");
+	printf("\n\t-b: tamanho do buffer\n");
+
+	printf("Opcionais:");
+	printf("\n\t-p: porta do servidor (default: 8080)\n");
 }

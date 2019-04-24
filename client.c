@@ -27,7 +27,7 @@ struct globalConfig_t
 	int silent;		/* -s option */
 } globalConfig;
 
-static const char *optString = "h:p:b:f:lsh?";
+static const char *optString = "h:p:b:f:ls?";
 
 char *buffer;
 
@@ -39,7 +39,7 @@ int main(int argc, char *const argv[])
 	struct timeval start, end;
 	long fileSize;
 
-	globalConfig.serverPort = 80;
+	globalConfig.serverPort = 8080;
 	globalConfig.serverIP = "127.0.0.1";
 	globalConfig.silent = 0;
 	globalConfig.fileName = "";
@@ -48,6 +48,7 @@ int main(int argc, char *const argv[])
 	//Obtem a configuração a partir dos argumentos da linha de comando
 	getConfiguration(argc, argv);
 
+	//Aloca espaço para o buffer
 	buffer = malloc(globalConfig.bufferSize * sizeof(char));
 
 	//Inicializa os dados do Socket
@@ -161,6 +162,7 @@ void logDataToFile(int bufferSize, long downloadTime, long fileSize)
 	FILE *file;
 	int fileExists = 0;
 
+	//Descobre se o arquivo já existe
 	if (file = fopen("clientData.txt", "r"))
 	{
 		fileExists = 1;
@@ -169,11 +171,13 @@ void logDataToFile(int bufferSize, long downloadTime, long fileSize)
 
 	file = fopen("clientData.txt", "a");
 
+	//Se o arquivo está sendo criado agora, insere o cabeçalho
 	if (!fileExists)
 	{
 		fprintf(file, "bufferSize downloadTime fileSize\n");
 	}
 
+	//Grava os dados importantes no arquivo
 	fprintf(file, "%i %ld %ld\n", bufferSize, downloadTime, fileSize);
 
 	fclose(file);
@@ -236,7 +240,7 @@ void displayUsage()
 
 	printf("Opcionais:");
 	printf("\n\t-h: endereço do servidor (default: 127.0.0.1)");
-	printf("\n\t-p: porta do servidor (default: 80)");
+	printf("\n\t-p: porta do servidor (default: 8080)");
 	printf("\n\t-l: habilita log dos dados para arquivo");
 	printf("\n\t-s: execução silenciosa, desabilita output para o terminal\n");
 }
