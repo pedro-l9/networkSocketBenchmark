@@ -102,6 +102,7 @@ int main(int argc, char *const argv[])
 	globalConfig.serverPort = 8080;
 	globalConfig.serverIP = "127.0.0.1";
 	globalConfig.silent = 0;
+	globalConfig.logData = 0;
 	globalConfig.fileName = "";
 	globalConfig.bufferSize = 0;
 
@@ -136,7 +137,7 @@ int main(int argc, char *const argv[])
 			   fileSize,
 			   end.tv_sec - start.tv_sec,
 			   end.tv_usec - start.tv_usec);
-	else
+	else if (globalConfig.logData)
 	{
 		logDataToFile(globalConfig.bufferSize, downloadTime, fileSize);
 	}

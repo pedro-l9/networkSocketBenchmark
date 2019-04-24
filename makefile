@@ -15,4 +15,4 @@ server: server.c
 	@$(CC) server.c -o server
 
 clean: 
-	@rm -rf download client server
+	@rm -rf download client server clientData.txt

@@ -18,9 +18,10 @@ struct globalConfig_t
 {
 	int port;		/* -p option */
 	int bufferSize; /* -b option */
+	int silent;		/* -s option */
 } globalConfig;
 
-static const char *optString = "p:b:?";
+static const char *optString = "p:b:s?";
 
 void displayUsage()
 {
@@ -30,7 +31,8 @@ void displayUsage()
 	printf("\n\t-b: tamanho do buffer\n");
 
 	printf("Opcionais:");
-	printf("\n\t-p: porta do servidor (default: 8080)\n");
+	printf("\n\t-p: porta do servidor (default: 8080)");
+	printf("\n\t-s: execução silenciosa, desabilita output para o terminal\n");
 }
 
 void getConfiguration(int argc, char *const argv[])
@@ -47,6 +49,10 @@ void getConfiguration(int argc, char *const argv[])
 
 		case 'b':
 			globalConfig.bufferSize = atoi(optarg);
+			break;
+
+		case 's':
+			globalConfig.silent = 1;
 			break;
 
 		case '?':
@@ -76,6 +82,7 @@ int main(int argc, char *const argv[])
 
 	globalConfig.port = 8080;
 	globalConfig.bufferSize = 0;
+	globalConfig.silent = 0;
 
 	//Configura o programa a partir dos argumentos de linha de comando
 	getConfiguration(argc, argv);
@@ -86,7 +93,8 @@ int main(int argc, char *const argv[])
 	//Inicializa os dados do Socket
 	initServerSocket(&server_fd, &opt, &address);
 
-	printf("Aguardando conexões...\n");
+	if (!globalConfig.silent)
+		printf("Aguardando conexões...\n");
 
 	while (1)
 	{
@@ -98,11 +106,13 @@ int main(int argc, char *const argv[])
 
 		//Lê a primera requisição, que tem que ser o nome do arquivo
 		read(socket, buffer, 200);
-		printf("Nome do arquivo: %s\n", buffer);
+		if (!globalConfig.silent)
+			printf("Nome do arquivo: %s\n", buffer);
 
 		//Abre o arquivo para começar o streaming e mede o tamanho dele
 		filePointer = openFile(buffer, &fileSize);
-		printf("Arquivo aberto! Tamanho: %ld bytes\n", fileSize);
+		if (!globalConfig.silent)
+			printf("Arquivo aberto! Tamanho: %ld bytes\n", fileSize);
 
 		//Envia o tamanho do arquivo que será enviado
 		send(socket, &fileSize, sizeof(long), 0);
@@ -125,7 +135,8 @@ int main(int argc, char *const argv[])
 		//Calcula o tempo de transmissão do arquivo em microsegundos
 		uploadTime = ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec));
 
-		printf("Enviados um total de %ld bytes em %ld microsegundos\n", totalBytes, uploadTime);
+		if (!globalConfig.silent)
+			printf("Enviados um total de %ld bytes em %ld microsegundos\n", totalBytes, uploadTime);
 	}
 	return 0;
 }
@@ -216,7 +227,8 @@ long sendFile(int *socket, FILE *filePointer, long fileSize, char *buffer, int b
 		sentBytes = send(*socket, buffer, biteSize, 0);
 		totalBytes += sentBytes;
 
-		printf("Enviado: %d bytes\n", sentBytes);
+		if (!globalConfig.silent)
+			printf("Enviado: %d bytes\n", sentBytes);
 	}
 
 	return totalBytes;
