@@ -1,19 +1,19 @@
 #!/bin/bash
 
-readonly REPETITIONS=10
-readonly MIN_BUFFER_POWER=0
-readonly MAX_BUFFER_POWER=16
+readonly REPETITIONS=30
+readonly MIN_BUFFER_POWER=5
+readonly MAX_BUFFER_POWER=27
 
 make clean
 make
-./server -s -b 4000000 &
+pkill server
+./server -b 135000000 &
 
-for (( i=$MIN_BUFFER_POWER; i<=$MAX_BUFFER_POWER; i++))
+for (( i=$MIN_BUFFER_POWER; i<=$MAX_BUFFER_POWER; i++));
 do 
-    for (( j=0; j<$REPETITIONS; j++))
+    for (( j=0; j<$REPETITIONS; j++));
     do
-        ./client -f kitten.png -b $((2 ** i)) -l
+        ./client -f kitten.png -b $((2 ** i)) -l -s
     done
 done
-
 pkill server
