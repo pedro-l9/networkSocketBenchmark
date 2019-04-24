@@ -13,6 +13,7 @@
 void initSocket(struct sockaddr_in *address, int *newSocket);
 void connectSocket(struct sockaddr_in *serverAddress, int *socket);
 void fetchFile(int socket, long *fileSize, char *fileName);
+void logDataToFile(int bufferSize, long downloadTime, long fileSize);
 void getConfiguration(int argc, char *const argv[]);
 void displayUsage();
 
@@ -74,6 +75,10 @@ int main(int argc, char *const argv[])
 			   fileSize,
 			   end.tv_sec - start.tv_sec,
 			   end.tv_usec - start.tv_usec);
+	else
+	{
+		logDataToFile(globalConfig.bufferSize, downloadTime, fileSize);
+	}
 
 	return 0;
 }
@@ -130,7 +135,7 @@ void fetchFile(int socket, long *fileSize, char *fileName)
 	}
 
 	//Faz a abertura do download a ser gravado
-	FILE *file = fopen(downloadFile, "wb");
+	FILE *file = fopen(downloadFile, "wa");
 
 	long bytesLeft = *fileSize;
 
@@ -151,7 +156,28 @@ void fetchFile(int socket, long *fileSize, char *fileName)
 	fclose(file);
 }
 
-void logDataToFile(int bufferSize, long downloadTime, long fileSize);
+void logDataToFile(int bufferSize, long downloadTime, long fileSize)
+{
+	FILE *file;
+	int fileExists = 0;
+
+	if (file = fopen("clientData.txt", "r"))
+	{
+		fileExists = 1;
+		fclose(file);
+	}
+
+	file = fopen("clientData.txt", "a");
+
+	if (!fileExists)
+	{
+		fprintf(file, "bufferSize downloadTime fileSize\n");
+	}
+
+	fprintf(file, "%i %ld %ld\n", bufferSize, downloadTime, fileSize);
+
+	fclose(file);
+}
 
 void getConfiguration(int argc, char *const argv[])
 {
