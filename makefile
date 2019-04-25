@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-I.
 
-.PHONY: all setup clean
+.PHONY: all setup clean test
 
 all: setup client server
 
@@ -16,3 +16,6 @@ server: src/server.c
 
 clean: 
 	@rm -rf download client server clientData.txt
+
+test: all
+	@rm -rf clientData.txt

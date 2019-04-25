@@ -137,7 +137,8 @@ int main(int argc, char *const argv[])
 			   fileSize,
 			   end.tv_sec - start.tv_sec,
 			   end.tv_usec - start.tv_usec);
-	else if (globalConfig.logData)
+
+	if (globalConfig.logData)
 	{
 		logDataToFile(globalConfig.bufferSize, downloadTime, fileSize);
 	}
