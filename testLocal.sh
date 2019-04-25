@@ -7,7 +7,7 @@ readonly MAX_BUFFER_POWER=27
 make clean
 make
 pkill server
-./server -b 135000000 -s &
+./server -b 143000000 -s &
 
 for (( i=$MIN_BUFFER_POWER; i<=$MAX_BUFFER_POWER; i++));
 do 

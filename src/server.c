@@ -9,6 +9,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#define FILES_FOLDER "files/"
+
 void initServerSocket(int *serverFd, int *opt, struct sockaddr_in *address);
 void listenSocket(int socketFd, struct sockaddr_in *address, int *newSocket);
 FILE *openFile(char *fileName, long *fileSize);
@@ -192,7 +194,13 @@ void listenSocket(int socketFd, struct sockaddr_in *address, int *newSocket)
 
 FILE *openFile(char *fileName, long *fileSize)
 {
-	FILE *filePointer = fopen(fileName, "r");
+	char *uploadFile;
+	uploadFile = malloc(sizeof(FILES_FOLDER) + sizeof(fileName));
+
+	strcpy(uploadFile, FILES_FOLDER);
+	strcat(uploadFile, fileName);
+
+	FILE *filePointer = fopen(uploadFile, "r");
 
 	if (filePointer == NULL)
 	{

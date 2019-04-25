@@ -6,13 +6,13 @@ CFLAGS=-I.
 all: setup client server
 
 setup:
-	@mkdir -p download
+	@mkdir -p download files
 
-client: client.c
-	@$(CC) client.c -o client
+client: src/client.c
+	@$(CC) src/client.c -o client
 
-server: server.c
-	@$(CC) server.c -o server
+server: src/server.c
+	@$(CC) src/server.c -o server
 
 clean: 
 	@rm -rf download client server clientData.txt
