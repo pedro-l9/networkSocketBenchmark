@@ -10,7 +10,7 @@
 
 THIS=$(basename $0)
 
-readonly REPETITIONS=5
+readonly REPETITIONS=10
 readonly MIN_BUFFER_POWER=14
 readonly MAX_BUFFER_POWER=27
 IS_LAN=false
@@ -85,6 +85,7 @@ do
         else    
             ./bin/client -f $FILENAME -b $((2 ** i)) -l -s
         fi
+        
         if (( $? )) 
         then
             exit 1
