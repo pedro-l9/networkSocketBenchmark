@@ -14,10 +14,3 @@
   }
   
   barplot(newData, names.arg=bufferSizes, ylab="Download Time(s)", xlab="Buffer Size(Bytes)")
-  
-  
-  #mean(dplyr::filter(data, bufferSize == 1)$downloadTime)
-  
-  #for(dataNode in data)
-  
-  #barplot(data$downloadTime, names.arg=data$bufferSize, ylab="Download Time", xlab="Buffer Size")
