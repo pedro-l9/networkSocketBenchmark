@@ -14,7 +14,7 @@
 void initClientSocket(struct sockaddr_in *address, int *newSocket);
 void connectSocket(struct sockaddr_in *serverAddress, int *socket);
 void fetchFile(int socket, long *fileSize, char *fileName, char *buffer);
-void logDataToFile(long bufferSize, long downloadTime, long fileSize);
+void logDataToFile(long bufferSize, long downloadTime, long fileSize, char *fileName);
 
 struct globalConfig_t
 {
@@ -121,7 +121,7 @@ int main(int argc, char *const argv[])
 	//Marca o tempo do início da transmissão do arquivo
 	gettimeofday(&start, NULL);
 
-	//Descobre o tamanho do arquivo em bytes e faz o download do servidor
+	//Baixa o arquivo do servidor e descobre o tamanho do arquivo recebido em bytes
 	fetchFile(socket, &fileSize, globalConfig.fileName, buffer);
 
 	//Marca o tempo do final da transmissão do arquivo
@@ -140,7 +140,7 @@ int main(int argc, char *const argv[])
 
 	if (globalConfig.logData)
 	{
-		logDataToFile(globalConfig.bufferSize, downloadTime, fileSize);
+		logDataToFile(globalConfig.bufferSize, downloadTime, fileSize, globalConfig.fileName);
 	}
 
 	return 0;
@@ -201,6 +201,7 @@ void fetchFile(int socket, long *fileSize, char *fileName, char *buffer)
 	FILE *file = fopen(downloadFile, "wa");
 
 	long bytesLeft = *fileSize;
+	*fileSize = 0;
 
 	//Faz a leitura do arquivo e a gravação do download
 	while (bytesLeft != 0)
@@ -209,7 +210,7 @@ void fetchFile(int socket, long *fileSize, char *fileName, char *buffer)
 		long biteSize = bytesLeft < globalConfig.bufferSize ? bytesLeft : globalConfig.bufferSize;
 
 		//Lê o arquivo, em "mordidas" do tamanho exato do dado restante ou o máximo que cabe no buffer
-		read(socket, buffer, biteSize);
+		*fileSize += read(socket, buffer, biteSize);
 		bytesLeft -= biteSize;
 
 		fwrite(buffer, sizeof(char), biteSize, file);
@@ -219,7 +220,7 @@ void fetchFile(int socket, long *fileSize, char *fileName, char *buffer)
 	fclose(file);
 }
 
-void logDataToFile(long bufferSize, long downloadTime, long fileSize)
+void logDataToFile(long bufferSize, long downloadTime, long fileSize, char *fileName)
 {
 	FILE *file;
 	int fileExists = 0;
@@ -236,11 +237,11 @@ void logDataToFile(long bufferSize, long downloadTime, long fileSize)
 	//Se o arquivo está sendo criado agora, insere o cabeçalho
 	if (!fileExists)
 	{
-		fprintf(file, "bufferSize downloadTime fileSize\n");
+		fprintf(file, "bufferSize downloadTime fileSize fileName\n");
 	}
 
 	//Grava os dados importantes no arquivo
-	fprintf(file, "%ld %ld %ld\n", bufferSize, downloadTime, fileSize);
+	fprintf(file, "%ld %ld %ld %s\n", bufferSize, downloadTime, fileSize, fileName);
 
 	fclose(file);
 }

@@ -14,6 +14,7 @@ readonly REPETITIONS=10
 readonly MIN_BUFFER_POWER=14
 readonly MAX_BUFFER_POWER=27
 IS_LAN=false
+IS_LOCAL=true
 DATA_FILE_NAME="remoteClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
 
 function usage() {
@@ -38,7 +39,8 @@ function startServer(){
 while getopts "f:h:b:l" OPT; do
     case $OPT in
         "f") FILENAME=$OPTARG;;
-        "h") REMOTE_HOST=$OPTARG;;
+        "h") REMOTE_HOST=$OPTARG;
+             IS_LOCAL=false;;
         "b") SERVER_BUFFER=$OPTARG;;
         "l") IS_LAN=true;;
         "?") usage;;
@@ -56,8 +58,8 @@ fi
 make test
 
 echo "File name: $FILENAME"
+
 ####-------SERVER STARTUP
-IS_LOCAL= test -z "$REMOTE_HOST"
 
 if $IS_LOCAL
 then
