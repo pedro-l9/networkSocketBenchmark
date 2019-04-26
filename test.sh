@@ -12,16 +12,17 @@ THIS=$(basename $0)
 set -e
 
 readonly REPETITIONS=5
-readonly MIN_BUFFER_POWER=4
+readonly MIN_BUFFER_POWER=27
 readonly MAX_BUFFER_POWER=27
 SERVER_BUFFER=10000000
+IS_LAN=false
 DATA_FILE_NAME="remoteClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
 
 function usage() {
     echo -e "$THIS 0.1\t-\tAuthor: Pedro Lacerda<phenrique.lacerda1@gmail.com>"
     echo "
     Usage:
-    $THIS -f <arquivo> [-h <endereço_remoto>] [-b <server_buffer>]
+    $THIS -f <arquivo> [-h <endereço_remoto>] [-b <server_buffer>] [-l]
     "
     exit -1
 }
@@ -36,11 +37,12 @@ function startServer(){
 }
 
 ####-------CONFIGURATION
-while getopts "f:h:b:" OPT; do
+while getopts "f:h:b:l" OPT; do
     case $OPT in
         "f") FILENAME=$OPTARG;;
         "h") REMOTE_HOST=$OPTARG;;
         "b") SERVER_BUFFER=$OPTARG;;
+        "l") IS_LAN=true;;
         "?") usage;;
     esac
 done
@@ -64,6 +66,10 @@ then
     DATA_FILE_NAME="localClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
 else
     echo "Remote server IP: $REMOTE_HOST"
+    if $IS_LAN
+    then
+        DATA_FILE_NAME="lanClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
+    fi
 fi
 
 for (( i=$MIN_BUFFER_POWER; i<=$MAX_BUFFER_POWER; i++));
@@ -81,10 +87,12 @@ do
     echo "2^$i Done"
 done
 
-exec 2>/dev/null
-
-pkill server
-echo "Server stopped..."
+if test -z "$REMOTE_HOST"
+then
+    exec 2>/dev/null
+    pkill server
+    echo "Server stopped..."
+fi
 
 mv clientData.txt $DATA_FILE_NAME
 
