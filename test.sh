@@ -10,9 +10,9 @@
 
 THIS=$(basename $0)
 
-readonly REPETITIONS=10
-readonly MIN_BUFFER_POWER=14
-readonly MAX_BUFFER_POWER=27
+readonly REPETITIONS=1
+readonly MIN_BUFFER_POWER=18
+readonly MAX_BUFFER_POWER=18
 IS_LAN=false
 IS_LOCAL=true
 DATA_FILE_NAME="remoteClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
@@ -85,7 +85,7 @@ do
     do
         if ! $IS_LOCAL
         then 
-            ./bin/client -f $FILENAME -b $((2 ** i)) -h $REMOTE_HOST -l -s
+            ./bin/client -f $FILENAME -b $((2 ** i)) -h $REMOTE_HOST -l
         else    
             ./bin/client -f $FILENAME -b $((2 ** i)) -l -s
         fi

@@ -206,15 +206,25 @@ void fetchFile(int socket, long *fileSize, char *fileName, char *buffer)
 	//Faz a leitura do arquivo e a gravação do download
 	while (bytesLeft != 0)
 	{
-		long sentBytes;
+		long receivedBytes;
 		long biteSize = bytesLeft < globalConfig.bufferSize ? bytesLeft : globalConfig.bufferSize;
 
 		//Lê o arquivo, em "mordidas" do tamanho exato do dado restante ou o máximo que cabe no buffer
-		*fileSize += read(socket, buffer, biteSize);
+		receivedBytes = read(socket, buffer, biteSize);
+		*fileSize += receivedBytes;
+
 		bytesLeft -= biteSize;
+
+		if (!globalConfig.silent)
+			printf("%ld bytes read from socket\n", receivedBytes);
 
 		fwrite(buffer, sizeof(char), biteSize, file);
 	}
+
+	//Envia confirmação de recebimento
+	send(socket, buffer, 1, 0);
+	if (!globalConfig.silent)
+		printf("Recebimento confirmado\n");
 
 	//Fecha o arquivo
 	fclose(file);

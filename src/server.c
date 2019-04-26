@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <errno.h>
 #include <time.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -125,6 +126,11 @@ int main(int argc, char *const argv[])
 		//Envia o arquivo
 		totalBytes = sendFile(&socket, filePointer, fileSize, buffer, globalConfig.bufferSize);
 
+		//Aguarda confirmação de recebimento
+		read(socket, buffer, 1);
+		if (!globalConfig.silent)
+			printf("Recebimento confirmado\n");
+
 		//Marca o tempo do final da transmissão do arquivo
 		gettimeofday(&end, NULL);
 
@@ -240,6 +246,12 @@ long sendFile(int *socket, FILE *filePointer, long fileSize, char *buffer, long 
 
 		if (!globalConfig.silent)
 			printf("Enviado: %ld bytes\n", sentBytes);
+
+		if (sentBytes < 0)
+		{
+			fprintf(stderr, "Erro no envio: %s\n", strerror(errno));
+			exit(1);
+		}
 	}
 
 	return totalBytes;
