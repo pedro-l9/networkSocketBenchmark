@@ -82,6 +82,10 @@ do
         else    
             ./bin/client -f $FILENAME -b $((2 ** i)) -l -s
         fi
+        if (( $? )); 
+        then
+            exit 1
+        fi
     done
     echo "2^$i Done"
 done
