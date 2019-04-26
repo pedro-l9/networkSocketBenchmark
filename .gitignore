@@ -1,6 +1,5 @@
 .vscode
-client
-server
 clientData.txt
 download
 files
+bin
