@@ -9,6 +9,7 @@
 ########
 
 THIS=$(basename $0)
+set -e
 
 readonly REPETITIONS=5
 readonly MIN_BUFFER_POWER=4
@@ -54,11 +55,15 @@ fi
 ####-------CLEANUP
 make test
 
+echo "File name: $FILENAME"
 ####-------SERVER STARTUP
 if test -z "$REMOTE_HOST"
 then
+    echo "Server buffer size: $SERVER_BUFFER"
     startServer
     DATA_FILE_NAME="localClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
+else
+    echo "Remote server IP: $REMOTE_HOST"
 fi
 
 for (( i=$MIN_BUFFER_POWER; i<=$MAX_BUFFER_POWER; i++));

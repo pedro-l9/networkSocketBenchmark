@@ -83,7 +83,7 @@ void getConfiguration(int argc, char *const argv[])
 		opt = getopt(argc, argv, optString);
 	}
 
-	if (globalConfig.bufferSize == 0 || strcmp(globalConfig.fileName, ""))
+	if (globalConfig.bufferSize == 0 || strcmp(globalConfig.fileName, "") == 0)
 	{
 		displayUsage();
 		exit(EXIT_FAILURE);
