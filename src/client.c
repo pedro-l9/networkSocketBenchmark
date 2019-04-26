@@ -83,7 +83,7 @@ void getConfiguration(int argc, char *const argv[])
 		opt = getopt(argc, argv, optString);
 	}
 
-	if (globalConfig.bufferSize == 0 || globalConfig.fileName == "")
+	if (globalConfig.bufferSize == 0 || strcmp(globalConfig.fileName, ""))
 	{
 		displayUsage();
 		exit(EXIT_FAILURE);
@@ -225,7 +225,7 @@ void logDataToFile(int bufferSize, long downloadTime, long fileSize)
 	int fileExists = 0;
 
 	//Descobre se o arquivo já existe
-	if (file = fopen("clientData.txt", "r"))
+	if ((file = fopen("clientData.txt", "r")))
 	{
 		fileExists = 1;
 		fclose(file);

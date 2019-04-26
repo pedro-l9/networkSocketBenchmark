@@ -11,9 +11,10 @@
 THIS=$(basename $0)
 
 readonly REPETITIONS=5
-readonly MIN_BUFFER_POWER=14
+readonly MIN_BUFFER_POWER=4
 readonly MAX_BUFFER_POWER=27
 SERVER_BUFFER=10000000
+DATA_FILE_NAME="remoteClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
 
 function usage() {
     echo -e "$THIS 0.1\t-\tAuthor: Pedro Lacerda<phenrique.lacerda1@gmail.com>"
@@ -57,6 +58,7 @@ make test
 if test -z "$REMOTE_HOST"
 then
     startServer
+    DATA_FILE_NAME="localClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
 fi
 
 for (( i=$MIN_BUFFER_POWER; i<=$MAX_BUFFER_POWER; i++));
@@ -77,7 +79,8 @@ done
 exec 2>/dev/null
 
 pkill server
+echo "Server stopped..."
 
-mv clientData.txt "localClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
+mv clientData.txt $DATA_FILE_NAME
 
 exit 0
