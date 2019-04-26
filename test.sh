@@ -57,7 +57,9 @@ make test
 
 echo "File name: $FILENAME"
 ####-------SERVER STARTUP
-if test -z "$REMOTE_HOST"
+IS_LOCAL= test -z "$REMOTE_HOST"
+
+if $IS_LOCAL
 then
     if test -z "$SERVER_BUFFER"
     then 
@@ -79,13 +81,13 @@ do
     echo "Starting 2^$i"
     for (( j=0; j<$REPETITIONS; j++));
     do
-        if ! test -z "$REMOTE_HOST"
+        if ! $IS_LOCAL
         then 
             ./bin/client -f $FILENAME -b $((2 ** i)) -h $REMOTE_HOST -l -s
         else    
             ./bin/client -f $FILENAME -b $((2 ** i)) -l -s
         fi
-        
+
         if (( $? )) 
         then
             exit 1
@@ -94,7 +96,7 @@ do
     echo "2^$i Done"
 done
 
-if test -z "$REMOTE_HOST"
+if $IS_LOCAL
 then
     exec 2>/dev/null
     pkill server
