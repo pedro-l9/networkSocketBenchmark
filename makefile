@@ -3,15 +3,15 @@ CFLAGS=-I.
 
 .PHONY: all setup clean test
 
-all: setup client server
+all: setup bin/client bin/server
 
 setup:
 	@mkdir -p download files bin
 
-client: src/client.c
+bin/client: src/client.c
 	@$(CC) src/client.c -o bin/client
 
-server: src/server.c
+bin/server: src/server.c
 	@$(CC) src/server.c -o bin/server
 
 clean: 

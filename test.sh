@@ -10,7 +10,7 @@
 
 THIS=$(basename $0)
 
-readonly REPETITIONS=10
+readonly REPETITIONS=5
 readonly MIN_BUFFER_POWER=14
 readonly MAX_BUFFER_POWER=27
 IS_LAN=false
@@ -29,7 +29,7 @@ function usage() {
 function startServer(){
     pkill server
     echo "Starting server"
-    ./bin/server -b $SERVER_BUFFER -s &
+    ./bin/server -s -b $SERVER_BUFFER &
     sleep 3
     echo "Server started..."
 }
@@ -85,7 +85,7 @@ do
         else    
             ./bin/client -f $FILENAME -b $((2 ** i)) -l -s
         fi
-        if (( $? )); 
+        if (( $? )) 
         then
             exit 1
         fi
