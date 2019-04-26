@@ -200,6 +200,8 @@ FILE *openFile(char *fileName, long *fileSize)
 	strcpy(uploadFile, FILES_FOLDER);
 	strcat(uploadFile, fileName);
 
+	printf("Abrindo %s\n", uploadFile);
+
 	FILE *filePointer = fopen(uploadFile, "r");
 
 	if (filePointer == NULL)

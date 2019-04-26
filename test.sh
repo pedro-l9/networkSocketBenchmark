@@ -11,8 +11,8 @@
 THIS=$(basename $0)
 
 readonly REPETITIONS=10
-readonly MIN_BUFFER_POWER=22
-readonly MAX_BUFFER_POWER=22
+readonly MIN_BUFFER_POWER=14
+readonly MAX_BUFFER_POWER=27
 SERVER_BUFFER=10000000
 IS_LAN=false
 DATA_FILE_NAME="remoteClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
@@ -30,7 +30,7 @@ function usage() {
 function startServer(){
     pkill server
     echo "Starting server"
-    ./server -b $SERVER_BUFFER &
+    ./bin/server -b $SERVER_BUFFER -s&
     sleep 3
     echo "Server started..."
 }
@@ -78,9 +78,9 @@ do
     do
         if ! test -z "$REMOTE_HOST"
         then 
-            ./client -f $FILENAME -b $((2 ** i)) -h $REMOTE_HOST -l -s
+            ./bin/client -f $FILENAME -b $((2 ** i)) -h $REMOTE_HOST -l -s
         else    
-            ./client -f $FILENAME -b $((2 ** i)) -l -s
+            ./bin/client -f $FILENAME -b $((2 ** i)) -l -s
         fi
     done
     echo "2^$i Done"
