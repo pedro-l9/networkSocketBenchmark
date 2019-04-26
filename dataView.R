@@ -1,9 +1,9 @@
   library(dplyr)
   
-  data <- read.table("clientData.txt", header = TRUE)
+  data <- read.table("dados/3.2MB/remoteClientData-20-4~27.txt", header = TRUE)
   
-  minBufferPower<-6
-  maxBufferPower<-22
+  minBufferPower<-14
+  maxBufferPower<-27
   
   newData<-c()
   bufferSizes<-c()

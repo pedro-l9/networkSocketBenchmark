@@ -29,7 +29,7 @@ function usage() {
 function startServer(){
     pkill server
     echo "Starting server"
-    ./bin/server -s -b $SERVER_BUFFER &
+    ./bin/server -b $SERVER_BUFFER &
     sleep 3
     echo "Server started..."
 }
