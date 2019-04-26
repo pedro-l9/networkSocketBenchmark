@@ -212,13 +212,12 @@ void fetchFile(int socket, long *fileSize, char *fileName, char *buffer)
 		//Lê o arquivo, em "mordidas" do tamanho exato do dado restante ou o máximo que cabe no buffer
 		receivedBytes = read(socket, buffer, biteSize);
 		*fileSize += receivedBytes;
-
-		bytesLeft -= biteSize;
+		bytesLeft -= receivedBytes;
 
 		if (!globalConfig.silent)
 			printf("%ld bytes read from socket\n", receivedBytes);
 
-		fwrite(buffer, sizeof(char), biteSize, file);
+		fwrite(buffer, sizeof(char), receivedBytes, file);
 	}
 
 	//Envia confirmação de recebimento

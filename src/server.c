@@ -238,11 +238,12 @@ long sendFile(int *socket, FILE *filePointer, long fileSize, char *buffer, long 
 
 		//Faz a leitura do arquivo em "mordidas" do tamanho dos dados restantes ou até o limite do buffer
 		fread(buffer, 1, biteSize, filePointer);
-		fileSize -= biteSize;
 
 		//Faz o envio do arquivo em "mordidas" do tamanho no máximo igual ao do buffer
 		sentBytes = send(*socket, buffer, biteSize, 0);
 		totalBytes += sentBytes;
+
+		fileSize -= sentBytes;
 
 		if (!globalConfig.silent)
 			printf("Enviado: %ld bytes\n", sentBytes);
