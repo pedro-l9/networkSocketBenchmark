@@ -14,13 +14,13 @@
 void initServerSocket(int *serverFd, int *opt, struct sockaddr_in *address);
 void listenSocket(int socketFd, struct sockaddr_in *address, int *newSocket);
 FILE *openFile(char *fileName, long *fileSize);
-long sendFile(int *socket, FILE *filePointer, long fileSize, char *buffer, int bufferSize);
+long sendFile(int *socket, FILE *filePointer, long fileSize, char *buffer, long bufferSize);
 
 struct globalConfig_t
 {
-	int port;		/* -p option */
-	int bufferSize; /* -b option */
-	int silent;		/* -s option */
+	int port;		 /* -p option */
+	long bufferSize; /* -b option */
+	int silent;		 /* -s option */
 } globalConfig;
 
 static const char *optString = "p:b:s?";
@@ -50,7 +50,7 @@ void getConfiguration(int argc, char *const argv[])
 			break;
 
 		case 'b':
-			globalConfig.bufferSize = atoi(optarg);
+			globalConfig.bufferSize = atol(optarg);
 			break;
 
 		case 's':
@@ -218,14 +218,14 @@ FILE *openFile(char *fileName, long *fileSize)
 	return filePointer;
 }
 
-long sendFile(int *socket, FILE *filePointer, long fileSize, char *buffer, int bufferSize)
+long sendFile(int *socket, FILE *filePointer, long fileSize, char *buffer, long bufferSize)
 {
 	long totalBytes = 0;
 
 	while (fileSize != 0)
 	{
-		int sentBytes;
-		int biteSize = fileSize < bufferSize ? fileSize : bufferSize;
+		long sentBytes;
+		long biteSize = fileSize < bufferSize ? fileSize : bufferSize;
 
 		//Faz a leitura do arquivo em "mordidas" do tamanho dos dados restantes ou até o limite do buffer
 		fread(buffer, 1, biteSize, filePointer);
@@ -236,7 +236,7 @@ long sendFile(int *socket, FILE *filePointer, long fileSize, char *buffer, int b
 		totalBytes += sentBytes;
 
 		if (!globalConfig.silent)
-			printf("Enviado: %d bytes\n", sentBytes);
+			printf("Enviado: %ld bytes\n", sentBytes);
 	}
 
 	return totalBytes;

@@ -14,16 +14,16 @@
 void initClientSocket(struct sockaddr_in *address, int *newSocket);
 void connectSocket(struct sockaddr_in *serverAddress, int *socket);
 void fetchFile(int socket, long *fileSize, char *fileName, char *buffer);
-void logDataToFile(int bufferSize, long downloadTime, long fileSize);
+void logDataToFile(long bufferSize, long downloadTime, long fileSize);
 
 struct globalConfig_t
 {
-	char *serverIP; /* -h option */
-	int serverPort; /* -p option */
-	char *fileName; /* -f option */
-	int bufferSize; /* -b option */
-	int logData;	/* -l option */
-	int silent;		/* -s option */
+	char *serverIP;  /* -h option */
+	int serverPort;  /* -p option */
+	char *fileName;  /* -f option */
+	long bufferSize; /* -b option */
+	int logData;	 /* -l option */
+	int silent;		 /* -s option */
 } globalConfig;
 
 static const char *optString = "h:p:b:f:ls?";
@@ -60,7 +60,7 @@ void getConfiguration(int argc, char *const argv[])
 			break;
 
 		case 'b':
-			globalConfig.bufferSize = atoi(optarg);
+			globalConfig.bufferSize = atol(optarg);
 			break;
 
 		case 'f':
@@ -131,7 +131,7 @@ int main(int argc, char *const argv[])
 	long downloadTime = ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec));
 
 	if (!globalConfig.silent)
-		printf("Buffer = %5u byte(s), %6.2lf kbps (%ld bytes em %lu.%06lu s)\n",
+		printf("Buffer = %5lu byte(s), %6.2lf kbps (%ld bytes em %lu.%06lu s)\n",
 			   globalConfig.bufferSize,
 			   ((fileSize / 1024.0) / (downloadTime / 1000000.0)),
 			   fileSize,
@@ -205,8 +205,8 @@ void fetchFile(int socket, long *fileSize, char *fileName, char *buffer)
 	//Faz a leitura do arquivo e a gravação do download
 	while (bytesLeft != 0)
 	{
-		int sentBytes;
-		int biteSize = bytesLeft < globalConfig.bufferSize ? bytesLeft : globalConfig.bufferSize;
+		long sentBytes;
+		long biteSize = bytesLeft < globalConfig.bufferSize ? bytesLeft : globalConfig.bufferSize;
 
 		//Lê o arquivo, em "mordidas" do tamanho exato do dado restante ou o máximo que cabe no buffer
 		read(socket, buffer, biteSize);
@@ -219,7 +219,7 @@ void fetchFile(int socket, long *fileSize, char *fileName, char *buffer)
 	fclose(file);
 }
 
-void logDataToFile(int bufferSize, long downloadTime, long fileSize)
+void logDataToFile(long bufferSize, long downloadTime, long fileSize)
 {
 	FILE *file;
 	int fileExists = 0;
@@ -240,7 +240,7 @@ void logDataToFile(int bufferSize, long downloadTime, long fileSize)
 	}
 
 	//Grava os dados importantes no arquivo
-	fprintf(file, "%i %ld %ld\n", bufferSize, downloadTime, fileSize);
+	fprintf(file, "%ld %ld %ld\n", bufferSize, downloadTime, fileSize);
 
 	fclose(file);
 }

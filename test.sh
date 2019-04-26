@@ -9,11 +9,10 @@
 ########
 
 THIS=$(basename $0)
-set -e
 
-readonly REPETITIONS=5
-readonly MIN_BUFFER_POWER=27
-readonly MAX_BUFFER_POWER=27
+readonly REPETITIONS=10
+readonly MIN_BUFFER_POWER=22
+readonly MAX_BUFFER_POWER=22
 SERVER_BUFFER=10000000
 IS_LAN=false
 DATA_FILE_NAME="remoteClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
@@ -31,8 +30,8 @@ function usage() {
 function startServer(){
     pkill server
     echo "Starting server"
-    ./server -b $SERVER_BUFFER -s &
-    sleep 1
+    ./server -b $SERVER_BUFFER &
+    sleep 3
     echo "Server started..."
 }
 
