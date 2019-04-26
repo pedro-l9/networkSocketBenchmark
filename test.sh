@@ -13,7 +13,6 @@ THIS=$(basename $0)
 readonly REPETITIONS=10
 readonly MIN_BUFFER_POWER=14
 readonly MAX_BUFFER_POWER=27
-SERVER_BUFFER=10000000
 IS_LAN=false
 DATA_FILE_NAME="remoteClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
 
@@ -30,7 +29,7 @@ function usage() {
 function startServer(){
     pkill server
     echo "Starting server"
-    ./bin/server -b $SERVER_BUFFER -s&
+    ./bin/server -b $SERVER_BUFFER -s &
     sleep 3
     echo "Server started..."
 }
@@ -60,6 +59,10 @@ echo "File name: $FILENAME"
 ####-------SERVER STARTUP
 if test -z "$REMOTE_HOST"
 then
+    if test -z "$SERVER_BUFFER"
+    then 
+        SERVER_BUFFER=$(stat -c%s files/142MB.bin)
+    fi
     echo "Server buffer size: $SERVER_BUFFER"
     startServer
     DATA_FILE_NAME="localClientData-$REPETITIONS-$MIN_BUFFER_POWER~$MAX_BUFFER_POWER.txt"
