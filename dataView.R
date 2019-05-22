@@ -1,16 +1,34 @@
   library(dplyr)
   
-  data <- read.table("dados/3.1MB/localClientData-20-4~27.txt", header = TRUE)
-  
-  minBufferPower<-4
+  testType<-"remote"
+  count<-5
+  minBufferPower<-22
   maxBufferPower<-27
+  fileSize<-142
   
-  newData<-c()
+  meanDownloadTime<-c()
   bufferSizes<-c()
   
+  data <- read.table(
+    paste("dados/",
+          fileSize,
+          "MB/",
+          testType,
+          "ClientData-",
+          count,
+          "-", 
+          minBufferPower, 
+          "~", 
+          maxBufferPower,
+          ".txt",  
+          sep = ""),
+    header = TRUE)
+  
   for(i in c(minBufferPower:maxBufferPower)){
-    newData <- c(newData, mean(dplyr::filter(data, bufferSize == 2**i)$downloadTime)/1000000)
-    bufferSizes <- c(bufferSizes, 2**i)
+    meanDownloadTime <- c(meanDownloadTime, 
+                          mean(dplyr::filter(data, 
+                                             bufferSize == 2**i)$downloadTime)/1000000)
+    bufferSizes <- c(bufferSizes, paste("2^",i, sep = ""))
   }
   
-  barplot(newData, names.arg=bufferSizes, ylab="Download Time(s)", xlab="Buffer Size(Bytes)")
+  barplot(meanDownloadTime, main=paste("Teste", testType, fileSize, "MB"),names.arg=bufferSizes, ylab="Tempo de Download (s)", xlab="Buffer Size (Bytes)")

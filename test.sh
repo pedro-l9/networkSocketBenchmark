@@ -10,8 +10,8 @@
 
 THIS=$(basename $0)
 
-readonly REPETITIONS=20
-readonly MIN_BUFFER_POWER=4
+readonly REPETITIONS=5
+readonly MIN_BUFFER_POWER=22
 readonly MAX_BUFFER_POWER=27
 IS_LAN=false
 IS_LOCAL=true
