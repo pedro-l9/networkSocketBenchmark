@@ -30,7 +30,7 @@ function usage() {
 function startServer(){
     pkill server
     echo "Starting server"
-    ./bin/server -s -b $SERVER_BUFFER &
+    ./bin/servidorFTP -s -b $SERVER_BUFFER &
     sleep 3
     echo "Server started..."
 }
@@ -85,9 +85,9 @@ do
     do
         if ! $IS_LOCAL
         then 
-            ./bin/client -f $FILENAME -b $((2 ** i)) -h $REMOTE_HOST -l -s
+            ./bin/clienteFTP -f $FILENAME -b $((2 ** i)) -h $REMOTE_HOST -l -s
         else    
-            ./bin/client -f $FILENAME -b $((2 ** i)) -l -s
+            ./bin/clienteFTP -f $FILENAME -b $((2 ** i)) -l -s
         fi
 
         if (( $? )) 
@@ -101,7 +101,7 @@ done
 if $IS_LOCAL
 then
     exec 2>/dev/null
-    pkill server
+    pkill servidorFTP
     echo "Server stopped..."
 fi
 

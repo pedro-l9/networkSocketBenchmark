@@ -3,16 +3,16 @@ CFLAGS=-I.
 
 .PHONY: all setup clean test
 
-all: setup bin/client bin/server
+all: setup bin/clienteFTP bin/servidorFTP
 
 setup:
 	@mkdir -p download files bin
 
-bin/client: src/client.c
-	@$(CC) src/client.c -o bin/client
+bin/clienteFTP: src/clienteFTP.c
+	@$(CC) src/clienteFTP.c -o bin/clienteFTP
 
-bin/server: src/server.c
-	@$(CC) src/server.c -o bin/server
+bin/servidorFTP: src/servidorFTP.c
+	@$(CC) src/servidorFTP.c -o bin/servidorFTP
 
 clean: 
 	@rm -rf download bin clientData.txt
